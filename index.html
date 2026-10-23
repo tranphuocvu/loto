@@ -1,0 +1,94 @@
+<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Thống kê</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Thống kê"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#0b7a75">
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--ln:#ccc;--hd:#f0f0f0;--ac:#0b7a75;--y:#ffe600;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161616;--fg:#eee;--ln:#444;--hd:#262626;--ac:#3cc5bd}}
+:root[data-theme="dark"]{--bg:#161616;--fg:#eee;--ln:#444;--hd:#262626;--ac:#3cc5bd}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;margin:0;padding:10px;max-width:560px}
+h1{font-size:18px}h2{font-size:16px;margin:14px 0 6px}h3{font-size:15px;margin:16px 0 6px}
+table{border-collapse:collapse;width:100%;text-align:center}th,td{border:1px solid var(--ln);padding:6px 3px;font-size:14px}th{background:var(--hd)}small{font-weight:normal}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px}
+.t,button{font-size:14px;padding:7px 10px;border:1px solid var(--ln);background:var(--hd);color:var(--fg);border-radius:6px;white-space:nowrap}
+.t.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.y{background:var(--y);color:#000;padding:6px;border-radius:6px}.y th{background:#f5d800;color:#000}.y td{border-color:#999}
+.al{background:var(--y);color:#000;padding:8px;border-radius:6px;margin:8px 0;font-size:14px}.al div{margin:4px 0}
+.n{font-size:13px}textarea,input{width:100%;box-sizing:border-box;font-size:14px;padding:8px;background:var(--bg);color:var(--fg);border:1px solid var(--ln);border-radius:6px}
+select{width:100%;box-sizing:border-box;font-size:14px;padding:8px;background:var(--bg);color:var(--fg);border:1px solid var(--ln);border-radius:6px}summary{cursor:pointer}.er{color:#c00;font-size:14px}.ok{color:var(--ac);font-size:14px}.lk{padding-top:40px}.lk input,.lk button{margin:6px 0;display:block}
+</style></head><body><div id="app"></div>
+<script>
+var $=function(i){return document.getElementById(i)},mem={},ok=0,cur=String(new Date().getDay()),db,delArm=0,msg="";
+function ld(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}}
+function sv(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v;stor=0}}
+function e(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var DAYS=[["Thứ 2",1],["Thứ 3",2],["Thứ 4",3],["Thứ 5",4],["Thứ 6",5],["Thứ 7",6],["CN",0]],WD=["Chủ nhật","Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7"];
+function pd(s){var m=s.split("/");return new Date(+m[2],+m[1]-1,+m[0])}
+var KEY=null,Q=Promise.resolve(),chg=0,stor=1;
+function b64(u){var s="";u.forEach(function(c){s+=String.fromCharCode(c)});return btoa(s)}
+function ub(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0)})}
+async function dk(pw,salt){var m=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveKey"]);return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:200000,hash:"SHA-256"},m,{name:"AES-GCM",length:256},false,["encrypt","decrypt"])}
+async function enc(k,t){var iv=crypto.getRandomValues(new Uint8Array(12)),c=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},k,new TextEncoder().encode(t));return b64(iv)+"."+b64(new Uint8Array(c))}
+async function dec(k,s){var p=s.split("."),r=await crypto.subtle.decrypt({name:"AES-GCM",iv:ub(p[0])},k,ub(p[1]));return new TextDecoder().decode(r)}
+function today(){var d=new Date(),p=function(n){return String(n).padStart(2,"0")};return p(d.getDate())+p(d.getMonth()+1)+d.getFullYear()}
+function kk(s){return+(s.slice(4)+s.slice(2,4)+s.slice(0,2))}
+function fmt(s){return s.slice(0,2)+"/"+s.slice(2,4)+"/"+s.slice(4)}
+function save(){Q=Q.then(pers).catch(function(){stor=0})}
+async function pers(){if(!KEY||!db)return;var j=JSON.stringify(db),t=today(),ix=JSON.parse(ld("snx")||"[]");sv("db",await enc(KEY,j));sv("sn_"+t,await enc(KEY,j));if(ix.indexOf(t)<0)ix.push(t);ix.sort(function(a,b){return kk(a)-kk(b)});while(ix.length>30){var o=ix.shift();try{localStorage.removeItem("sn_"+o)}catch(x){delete mem["sn_"+o]}}sv("snx",JSON.stringify(ix))}
+async function rest(txt){var o=JSON.parse(txt);if(!o||typeof o.days!="object"||typeof o.ack!="object")throw 0;sv("sn_truoc",await enc(KEY,JSON.stringify(db)));db={days:o.days,ack:o.ack};save()}
+function lockUI(){var set=!ld("mt");$("app").innerHTML='<div class="lk"><h1>🔒 '+(set?"Đặt mã mở khóa":"Nhập mã")+'</h1><input id="pw" type="password" autocomplete="off" placeholder="'+(set?"Ít nhất 6 ký tự":"Mã")+'"><button id="go">'+(set?"Lưu mã":"Mở")+'</button><p id="er" class="er"></p>'+(set?'<p class="n">Mã này mã hóa dữ liệu trên máy. Nếu quên mã thì không khôi phục được, chỉ xóa và nạp lại từ file sao lưu.</p>':'<details><summary class="n">Quên mã?</summary><p class="n">Không lấy lại được mã. Bạn có thể xóa dữ liệu trên máy rồi khôi phục từ file sao lưu.</p><button id="wp">Xóa dữ liệu trên máy</button></details>')+'</div>';
+ var f=async function(){var v=$("pw").value;$("er").textContent="";
+  if(set){if(v.length<6){$("er").textContent="Mã cần ít nhất 6 ký tự.";return}var salt=crypto.getRandomValues(new Uint8Array(16));KEY=await dk(v,salt);sv("mt",JSON.stringify({s:b64(salt)}));sv("vf",await enc(KEY,"ok"));db={days:{},ack:{}};save();ok=1;cur=String(new Date().getDay());R()}
+  else{try{KEY=await dk(v,ub(JSON.parse(ld("mt")).s));if(await dec(KEY,ld("vf"))!=="ok")throw 0;var d=ld("db");db=d?JSON.parse(await dec(KEY,d)):{days:{},ack:{}};ok=1;cur=String(new Date().getDay());R();try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(z){}}catch(x){KEY=null;$("er").textContent="Sai mã."}}};
+ $("go").onclick=f;$("pw").onkeydown=function(x){if(x.key==="Enter")f()};
+ var wp=$("wp");if(wp){var arm=0;wp.onclick=function(){if(!arm){arm=1;wp.textContent="Bấm lần nữa để xóa hết dữ liệu trên máy";return}try{var ks=[];for(var i=0;i<localStorage.length;i++)ks.push(localStorage.key(i));ks.forEach(function(k){if(/^(db|mt|vf|snx|lastdl|sn_)/.test(k))localStorage.removeItem(k)})}catch(x){}mem={};lockUI()}}}
+function names(d){var n=[];(db.days[d]||[]).slice(-10).reverse().forEach(function(k){Object.keys(k.s).forEach(function(x){if(n.indexOf(x)<0)n.push(x)})});return n}
+function an(d,nm){var ks=(db.days[d]||[]).filter(function(k){return k.s[nm]}).slice(-10);if(!ks.length)return null;var t={},l={};
+ ks.forEach(function(k,i){k.s[nm].forEach(function(x){t[x]=(t[x]||0)+1;l[x]=i})});
+ var o=Object.keys(t).sort(function(a,b){return t[b]-t[a]||l[b]-l[a]||a-b}),top=o.slice(0,4),c=t[top[3]];
+ return{ks:ks,t:t,top:top,ties:top.length==4?o.slice(4).filter(function(x){return t[x]==c}):[],c:c,l:l}}
+function alerts(){var r=[];DAYS.forEach(function(D){var d=String(D[1]);names(d).forEach(function(n){var a=an(d,n);if(!a)return;db.ack[d]=db.ack[d]||{};
+ if(db.ack[d][n]===undefined){db.ack[d][n]=a.top[0];save()}else if(db.ack[d][n]!==a.top[0])r.push({d:d,lab:D[0],n:n,from:db.ack[d][n],to:a.top[0]})})});return r}
+function dayV(d){var ns=names(d),h="",lab=["Vua","Á hậu 1","Á hậu 2","Á hậu 3"];
+ if(!ns.length)h+="<p>Chưa có dữ liệu. Dán kỳ đầu tiên ở khung bên dưới.</p>";
+ ns.forEach(function(n){var a=an(d,n),ch=db.ack[d]&&db.ack[d][n]!==a.top[0];
+  h+='<div class="'+(ch?"y":"")+'"><h2>'+e(n)+'</h2><table><tr><th>Kỳ</th>'+a.top.map(function(x,i){return"<th>"+lab[i]+"<br>"+x+"<br><small>"+a.t[x]+" lần</small></th>"}).join("")+"</tr>";
+  for(var i=a.ks.length-1;i>=0;i--){var s=a.ks[i].s[n];h+="<tr><td>"+a.ks[i].date+"</td>"+a.top.map(function(x){var c=s.filter(function(y){return y===x}).length;return"<td>"+(c?"🔴 "+c:"⚪")+"</td>"}).join("")+"</tr>"}
+  h+='</table><p class="n">'+(a.ties.length?"Số hòa ở mức "+a.c+" lần, không được chọn: "+a.ties.map(function(x){return x+" (về gần nhất "+a.ks[a.l[x]].date+")"}).join(", ")+".":"Không có số hòa ở ranh giới chọn.")+"</p></div>"});
+ h+='<h3>Thêm kỳ mới</h3><textarea id="in" rows="6" placeholder="21/10/2026&#10;Đà Nẵng: 07 | 14 | 24 | 30, 30, 33 | 40 | 51, 53 | - | 75, 77 | 86, 87 | 90, 98&#10;Khánh Hòa: ..."></textarea><p><button data-a="add">Thêm kỳ</button> <button data-a="del">'+(delArm?"Bấm lần nữa để xóa":"Xóa kỳ mới nhất")+'</button></p><p id="msg" class="'+(/^Đã/.test(msg)?"ok":"er")+'">'+e(msg)+"</p>";return h}
+var rselV="";
+function opts(){var ix=JSON.parse(ld("snx")||"[]").sort(function(x,y){return kk(y)-kk(x)}),o=ix.map(function(s){return[s,s+" ("+fmt(s)+")"]});if(ld("sn_truoc"))o.push(["truoc","Trước lần khôi phục gần nhất"]);o.push(["file","Chọn file từ máy…"]);return o}
+function setV(){var o=opts();if(!o.some(function(x){return x[0]==rselV}))rselV=o[0][0];
+ return'<p id="msg" class="'+(/^Đã/.test(msg)?"ok":"er")+'">'+e(msg)+'</p><h2>Sao lưu</h2><p class="n">Mỗi ngày app tự giữ một bản theo ngày (ví dụ '+today()+'), giữ 30 ngày gần nhất. Bản của ngày nào là trạng thái cuối cùng của ngày đó.</p><p><button data-a="dl">Tải file '+today()+'.json</button></p><p class="n">Hoặc sao chép dữ liệu chữ bên dưới:</p><textarea rows="4" readonly>'+e(JSON.stringify(db))+'</textarea><h2>Khôi phục</h2><p class="n">Chọn bản cần khôi phục:</p><select id="rsel">'+o.map(function(x){return'<option value="'+x[0]+'"'+(x[0]==rselV?" selected":"")+">"+e(x[1])+"</option>"}).join("")+"</select>"+(rselV=="file"?'<p><input id="fi" type="file" accept=".json,application/json"></p>':"")+'<p><button data-a="rsgo">Khôi phục</button></p><details><summary class="n">Dán dữ liệu chữ (dự phòng)</summary><textarea id="rs" rows="4" placeholder="Dán dữ liệu sao lưu"></textarea><p><button data-a="rs">Khôi phục từ chữ đã dán</button></p></details><h2>Mã khóa</h2>'+(chg?'<p><input id="oc" type="password" autocomplete="off" placeholder="Mã cũ"></p><p><input id="nw" type="password" autocomplete="off" placeholder="Mã mới (ít nhất 6 ký tự)"></p><p><button data-a="ncok">Đổi mã</button> <button data-a="ncx">Hủy</button></p>':'<p><button data-a="nc">Đặt mã mới</button> <button data-a="lock">Khóa ngay</button></p>')}
+function R(){if(!ok){lockUI();return}var al=alerts(),h='<div class="tabs">'+DAYS.map(function(D){var x=al.some(function(a){return a.d==D[1]});return'<button class="t'+(cur==D[1]?" on":"")+'" data-t="'+D[1]+'">'+D[0]+(x?" 🟡":"")+"</button>"}).join("")+'<button class="t'+(cur=="s"?" on":"")+'" data-t="s">⚙</button></div>';
+ if(!stor)h+='<div class="al">Không lưu được vào bộ nhớ máy. Hãy tải file sao lưu ngay.</div>';
+ if(ld("lastdl")!==today())h+='<div class="n">Hôm nay chưa tải file sao lưu <button data-a="dl">Tải file</button></div>';
+ if(al.length)h+='<div class="al">'+al.map(function(a){return"<div>"+a.lab+" - "+e(a.n)+": vua đổi từ "+a.from+" sang "+a.to+' <button data-a="ack" data-d="'+a.d+'" data-n="'+e(a.n)+'">Đã nhận</button></div>'}).join("")+"</div>";
+ $("app").innerHTML=h+(cur=="s"?setV():dayV(cur))}
+function parse(txt,wd){var L=txt.split("\n").map(function(s){return s.trim()}).filter(Boolean);if(L.length<2)throw"Cần 1 dòng ngày và ít nhất 1 đài.";
+ var m=L[0].match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(!m)throw"Dòng đầu phải là ngày, ví dụ 28/10/2026.";var D=pd(L[0]);if(D.getDate()!=+m[1]||D.getMonth()!=+m[2]-1)throw"Ngày không hợp lệ.";
+ if(D.getDay()!=wd)throw"Ngày "+L[0]+" là "+WD[D.getDay()]+", không phải tab này.";var s={};
+ for(var i=1;i<L.length;i++){var p=L[i].split(":");if(p.length!=2)throw"Dòng "+(i+1)+" cần dạng Tên đài: hàng 0 | hàng 1 | ...";var nm=p[0].trim(),rows=p[1].split("|");
+  if(rows.length!=10)throw nm+": cần đúng 10 hàng (0 đến 9), đang có "+rows.length+".";var nums=[],sm=[];
+  rows.forEach(function(r,h){r=r.trim();if(r==="-"||r===""){sm.push(0);return}var a=r.split(/[\s,]+/).filter(Boolean);a.forEach(function(x){if(!/^\d{2}$/.test(x))throw nm+" hàng "+h+": “"+x+"” không phải 2 chữ số.";if(+x[0]!=h)throw nm+" hàng "+h+": số "+x+" không thuộc hàng này.";nums.push(x)});sm.push(a.length)});
+  var need=/bắc/i.test(nm)?27:18;if(nums.length!=need)throw nm+": có "+nums.length+" số ("+sm.join("+")+"), cần "+need+". Kiểm tra lại ảnh.";s[nm]=nums}
+ return{date:L[0],key:+D,s:s}}
+document.addEventListener("click",async function(ev){var b=ev.target.closest("button");if(!b)return;var t=b.dataset.t,a=b.dataset.a;
+ if(t!==undefined){cur=t;msg="";delArm=0;R();return}
+ if(a=="ack"){db.ack[b.dataset.d][b.dataset.n]=an(b.dataset.d,b.dataset.n).top[0];save();R()}
+ if(a=="add"){try{var k=parse($("in").value,+cur),arr=db.days[cur]=db.days[cur]||[],i=arr.findIndex(function(x){return x.key==k.key});
+  if(i>=0)Object.assign(arr[i].s,k.s);else arr.push(k);arr.sort(function(x,y){return x.key-y.key});save();msg="Đã thêm kỳ "+k.date+".";delArm=0}catch(x){msg=String(x)}R()}
+ if(a=="del"){if(!delArm){delArm=1;R();return}var arr2=db.days[cur]||[];if(arr2.length){var g=arr2.pop();msg="Đã xóa kỳ "+g.date+".";save()}delArm=0;R()}
+ if(a=="rs"){try{await rest($("rs").value);msg="Đã khôi phục."}catch(x){msg="Dữ liệu sao lưu không hợp lệ."}R()}
+ if(a=="rsgo"){if(rselV=="file"){var fl=$("fi")&&$("fi").files[0];if(!fl){msg="Chưa chọn file.";R();return}var r=new FileReader();r.onload=async function(){try{await rest(String(r.result));msg="Đã khôi phục từ file "+fl.name+"."}catch(x){msg="File không hợp lệ, dữ liệu giữ nguyên."}R()};r.readAsText(fl)}else{try{var sj=ld("sn_"+rselV);if(!sj)throw 0;await rest(await dec(KEY,sj));msg="Đã khôi phục bản "+(rselV=="truoc"?"trước lần khôi phục gần nhất":rselV)+"."}catch(x){msg="Không khôi phục được bản này."}R()}}
+ if(a=="dl"){try{var t=today(),u=URL.createObjectURL(new Blob([JSON.stringify(db)],{type:"application/json"})),l=document.createElement("a");l.href=u;l.download=t+".json";document.body.appendChild(l);l.click();l.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);sv("lastdl",t);msg="Đã tạo file "+t+".json. Nếu máy không tải xuống, dùng khung sao lưu chữ bên dưới."}catch(x){msg="Không tạo được file trên thiết bị này."}R()}
+ if(a=="nc"){chg=1;msg="";R()}if(a=="ncx"){chg=0;msg="";R()}
+ if(a=="lock"){await Q;ok=0;KEY=null;db=null;R()}
+ if(a=="ncok"){try{var oc=$("oc").value,nw=$("nw").value;if(nw.length<6){msg="Mã mới cần ít nhất 6 ký tự.";R();return}await Q;var k0=await dk(oc,ub(JSON.parse(ld("mt")).s)),v0;try{v0=await dec(k0,ld("vf"))}catch(z){throw 1}if(v0!=="ok")throw 1;
+  var salt=crypto.getRandomValues(new Uint8Array(16)),nk=await dk(nw,salt),ix=JSON.parse(ld("snx")||"[]").concat(["truoc"]),w={};
+  for(var i=0;i<ix.length;i++){var raw=ld("sn_"+ix[i]);if(raw)w["sn_"+ix[i]]=await enc(nk,await dec(KEY,raw))}
+  w.db=await enc(nk,JSON.stringify(db));w.vf=await enc(nk,"ok");w.mt=JSON.stringify({s:b64(salt)});Object.keys(w).forEach(function(k){sv(k,w[k])});KEY=nk;chg=0;msg="Đã đổi mã."}catch(x){msg=x===1?"Mã cũ không đúng.":"Không đổi được mã."}R()}
+});
+document.addEventListener("change",function(ev){if(ev.target.id=="rsel"){rselV=ev.target.value;msg="";R()}});
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
+R();
+</script></body></html>
