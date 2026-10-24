@@ -5,16 +5,16 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161616;--fg:#eee;--ln:#444;--hd:#262626;--ac:#3cc5bd}}
 :root[data-theme="dark"]{--bg:#161616;--fg:#eee;--ln:#444;--hd:#262626;--ac:#3cc5bd}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;margin:0;padding:10px;max-width:560px}
-h1{font-size:18px}h2{font-size:16px;margin:14px 0 6px}h3{font-size:15px;margin:16px 0 6px}
-table{border-collapse:collapse;width:100%;text-align:center}th,td{border:1px solid var(--ln);padding:6px 3px;font-size:14px}th{background:var(--hd)}small{font-weight:normal}
-.tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px}
-.t,button{font-size:14px;padding:7px 10px;border:1px solid var(--ln);background:var(--hd);color:var(--fg);border-radius:6px;white-space:nowrap}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;margin:0;padding:6px;max-width:560px;font-size:13px}
+h1{font-size:16px}h2{font-size:14px;margin:8px 0 4px}h3{font-size:13px;margin:10px 0 4px}
+table{border-collapse:collapse;width:100%;text-align:center}th,td{border:1px solid var(--ln);padding:3px 2px;font-size:12px;line-height:1.25}th{background:var(--hd)}small{font-weight:normal}
+.tabs{display:flex;gap:3px;padding-bottom:4px}.tabs .t{flex:1;min-width:0;padding:6px 0;font-size:12px;text-align:center}
+.t,button{font-size:12px;padding:5px 8px;border:1px solid var(--ln);background:var(--hd);color:var(--fg);border-radius:6px;white-space:nowrap}
 .t.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 .y{background:var(--y);color:#000;padding:6px;border-radius:6px}.y th{background:#f5d800;color:#000}.y td{border-color:#999}
-.al{background:var(--y);color:#000;padding:8px;border-radius:6px;margin:8px 0;font-size:14px}.al div{margin:4px 0}
-.n{font-size:13px}textarea,input{width:100%;box-sizing:border-box;font-size:14px;padding:8px;background:var(--bg);color:var(--fg);border:1px solid var(--ln);border-radius:6px}
-select{width:100%;box-sizing:border-box;font-size:14px;padding:8px;background:var(--bg);color:var(--fg);border:1px solid var(--ln);border-radius:6px}summary{cursor:pointer}.er{color:#c00;font-size:14px}.ok{color:var(--ac);font-size:14px}.lk{padding-top:40px}.lk input,.lk button{margin:6px 0;display:block}
+.al{background:var(--y);color:#000;padding:6px;border-radius:6px;margin:6px 0;font-size:12px}.al div{margin:4px 0}
+.n{font-size:11px;margin:4px 0}textarea,input{width:100%;box-sizing:border-box;font-size:16px;padding:8px;background:var(--bg);color:var(--fg);border:1px solid var(--ln);border-radius:6px}
+select{width:100%;box-sizing:border-box;font-size:16px;padding:8px;background:var(--bg);color:var(--fg);border:1px solid var(--ln);border-radius:6px}summary{cursor:pointer}.er{color:#c00;font-size:14px}.ok{color:var(--ac);font-size:14px}.lk{padding-top:40px}.lk input,.lk button{margin:6px 0;display:block}
 </style></head><body><div id="app"></div>
 <script>
 var $=function(i){return document.getElementById(i)},mem={},ok=0,cur=String(new Date().getDay()),db,delArm=0,msg="";
